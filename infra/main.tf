@@ -64,14 +64,3 @@ module "web_server" {
   }
 }
 
-# --- CloudTrail Module ---
-module "cloudtrail" {
-  source      = "./modules/cloudtrail"
-  bucket_name = var.cloudtrail_bucket_name
-  account_id  = data.aws_caller_identity.current.account_id
-}
-
-# --- GuardDuty Module ---
-module "guardduty" {
-  source = "./modules/guardduty"
-}

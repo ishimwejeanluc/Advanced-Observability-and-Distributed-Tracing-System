@@ -28,8 +28,3 @@ variable "key_name" {
   default     = "devops-lab"
 
 }
-variable "cloudtrail_bucket_name" {
-  description = "Name of the S3 bucket for CloudTrail logs"
-  type        = string
-  default = "web-app-cloudtrail-logs"
-}
