@@ -1,0 +1,29 @@
+groups:
+  - name: web-app-alerts
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_errors_total[10m]))
+            /
+            clamp_min(sum(rate(http_requests_total[10m])), 1e-9)
+          ) * 100 > 5
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected (>5%)"
+          description: |
+            Error rate is {{ $value | printf "%.2f" }}% over the last 10m.
+            Investigate recent deployments or upstream dependencies.
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[10m])) by (le)) > 0.3
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency (>300ms) detected"
+          description: |
+            95th percentile latency is above 300ms for 10 minutes.

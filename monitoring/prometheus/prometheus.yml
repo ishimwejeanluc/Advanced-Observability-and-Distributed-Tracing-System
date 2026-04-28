@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 30s
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: "web-app"
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+     
+      - targets: ["web:5000"]
+        labels:
+          env: "dev"
+  - job_name: "node-exporter"
+    static_configs:
+      - targets: ["node-exporter:9100"]
