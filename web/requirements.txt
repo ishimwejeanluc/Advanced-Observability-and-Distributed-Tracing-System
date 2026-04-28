@@ -1,0 +1,10 @@
+Flask==3.0.2
+mysql-connector-python==8.3.0
+prometheus-client
+python-json-logger
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-instrumentation-flask
+opentelemetry-instrumentation-requests
+opentelemetry-exporter-jaeger
+opentelemetry-instrumentation-mysql

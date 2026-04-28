@@ -1,0 +1,4 @@
+---
+- name: Ensure base packages are installed
+  ansible.builtin.command: yum -y install curl
+  changed_when: false

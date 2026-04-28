@@ -1,0 +1,95 @@
+---
+- name: Create application directory
+  ansible.builtin.file:
+    path: "{{ app_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Create db directory
+  ansible.builtin.file:
+    path: "{{ app_dir }}/db"
+    state: directory
+    mode: "0755"
+
+- name: Copy docker-compose file
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../docker-compose.yml"
+    dest: "{{ app_dir }}/docker-compose.yml"
+    mode: "0644"
+
+- name: Copy database init script
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../db/init.sql"
+    dest: "{{ app_dir }}/db/init.sql"
+    mode: "0644"
+
+- name: Create monitoring directory structure
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ app_dir }}/monitoring"
+    - "{{ app_dir }}/monitoring/prometheus"
+    - "{{ app_dir }}/monitoring/grafana"
+    - "{{ app_dir }}/reverse-proxy"
+
+- name: Copy Prometheus configuration
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../monitoring/prometheus/"
+    dest: "{{ app_dir }}/monitoring/prometheus/"
+    mode: "0644"
+
+- name: Copy Grafana configuration
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../monitoring/grafana/"
+    dest: "{{ app_dir }}/monitoring/grafana/"
+    mode: "0644"
+
+- name: Copy Nginx configuration
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../reverse-proxy/"
+    dest: "{{ app_dir }}/reverse-proxy/"
+    mode: "0644"
+
+- name: Write environment file
+  ansible.builtin.template:
+    src: .env.j2
+    dest: "{{ app_dir }}/.env"
+    mode: "0600"
+
+- name: Ensure Docker registry credentials are provided
+  ansible.builtin.assert:
+    that:
+      - docker_username is defined
+      - docker_password is defined
+      - web_image is defined
+      - docker_username | length > 0
+      - docker_password | length > 0
+      - web_image | length > 0
+    fail_msg: "docker_username, docker_password, and web_image are required. Set them in vault.yml or pass them via ansible -e vars."
+
+- name: Login to Docker registry
+  ansible.builtin.shell: |
+    set -o pipefail
+    echo "{{ docker_password }}" | docker login -u "{{ docker_username }}" --password-stdin
+  args:
+    executable: /bin/bash
+  register: docker_login_result
+  changed_when: "'Login Succeeded' in docker_login_result.stdout"
+  no_log: true
+
+- name: Start application containers
+  community.docker.docker_compose_v2:
+    project_src: "{{ app_dir }}"
+    pull: missing
+    state: present
+
+- name: Verify application health endpoint
+  ansible.builtin.uri:
+    url: http://localhost:5000/api/health
+    status_code: 200
+  register: app_health
+  retries: 10
+  delay: 6
+  until: app_health.status == 200

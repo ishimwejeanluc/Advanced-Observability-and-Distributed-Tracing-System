@@ -1,0 +1,32 @@
+---
+- name: Configure app host
+  hosts: all
+  become: true
+  gather_facts: false
+  collections:
+    - community.docker
+  vars:
+    app_dir: /opt/multicontainer
+    compose_version: "v2.27.1"
+    db_name: "topics_db"
+    db_user: "root"
+    db_port: 3306
+    ansible_python_interpreter: /usr/bin/python3.8
+  vars_files:
+    - vault.yml
+  pre_tasks:
+    - name: Ensure Python 3.8 is installed
+      ansible.builtin.raw: |
+        if ! command -v python3.8 >/dev/null 2>&1; then
+          sudo amazon-linux-extras enable python3.8 >/dev/null 2>&1 || true
+          sudo yum -y install python38
+        fi
+      changed_when: false
+
+    - name: Gather facts
+      ansible.builtin.setup:
+
+  roles:
+    - role: base_packages
+    - role: docker_engine
+    - role: app_compose
