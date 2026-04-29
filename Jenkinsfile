@@ -66,19 +66,16 @@ pipeline {
                         def props = readProperties file: '.env'
                         def ec2Host = props['EC2_PUBLIC_DNS'] 
                         def image = readFile('docker_image.txt').trim()
-                        // Debug: print EC2 host
-                        sh """
-                            echo 'DEBUG: EC2 host is $ec2Host'
-                        """
+                        
                         withEnv(["EC2_HOST=${ec2Host}"]) {
                             sh '''
-                                #!/bin/bash
+                                bash -c "
                                 scp -o StrictHostKeyChecking=no -i "$ANSIBLE_SSH_KEY" .env "$ANSIBLE_SSH_USER"@$EC2_HOST:/tmp/.env
                             '''
                         }
                         // Run ansible-playbook, passing only non-secret args
                         sh '''
-                            #!/bin/bash
+                            bash -c "
                             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \
                                 -i "$ec2Host," \
                                 -u "$ANSIBLE_SSH_USER" \
@@ -89,7 +86,7 @@ pipeline {
                         '''
                         // Remove .env from EC2 after deploy (optional, for extra safety)
                         sh '''
-                            #!/bin/bash
+                            bash -c "
                             ssh -o StrictHostKeyChecking=no -i "$ANSIBLE_SSH_KEY" "$ANSIBLE_SSH_USER"@$ec2Host 'rm -f /tmp/.env'
                         '''
                     }
