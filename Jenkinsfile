@@ -57,7 +57,7 @@ pipeline {
             steps {
                 withCredentials([
                     sshUserPrivateKey(
-                        credentialsId: 'ec2-ssh2',
+                        credentialsId: 'ec2_ssh2',
                         keyFileVariable: 'ANSIBLE_SSH_KEY',
                         usernameVariable: 'ANSIBLE_SSH_USER'
                     )
