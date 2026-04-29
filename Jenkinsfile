@@ -66,6 +66,10 @@ pipeline {
                         def props = readProperties file: '.env'
                         def ec2Ip = props['EC2_PUBLIC_IP']
                         def image = readFile('docker_image.txt').trim()
+                        // Debug: print EC2 IP
+                        sh """
+                            echo 'DEBUG: EC2_PUBLIC_IP is $ec2Ip'
+                        """
                         // Copy .env securely to EC2
                         sh '''
                             scp -o StrictHostKeyChecking=no -i "$ANSIBLE_SSH_KEY" .env "$ANSIBLE_SSH_USER"@$ec2Ip:/tmp/.env
