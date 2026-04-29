@@ -70,10 +70,11 @@ pipeline {
                         sh """
                             echo 'DEBUG: EC2 host is $ec2Host'
                         """
-                        // Copy .env securely to EC2
-                        sh '''
-                            scp -o StrictHostKeyChecking=no -i "$ANSIBLE_SSH_KEY" .env "$ANSIBLE_SSH_USER"@$ec2Host:/tmp/.env
-                        '''
+                        withEnv(["EC2_HOST=${ec2Host}"]) {
+                            sh '''
+                                scp -o StrictHostKeyChecking=no -i "$ANSIBLE_SSH_KEY" .env "$ANSIBLE_SSH_USER"@$EC2_HOST:/tmp/.env
+                            '''
+                        }
                         // Run ansible-playbook, passing only non-secret args
                         sh '''
                             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \
