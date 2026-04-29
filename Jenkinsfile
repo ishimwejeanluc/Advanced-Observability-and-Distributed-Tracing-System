@@ -34,7 +34,7 @@ pipeline {
         stage('Docker Build & Push') {
             steps {
                 echo 'Building and pushing Docker image...'
-                withCredentials([file(credentialsId: 'app_env_file', variable: 'APP_ENV_FILE')]) {
+                withCredentials([file(credentialsId: 'app_env_file1', variable: 'APP_ENV_FILE')]) {
                     script {
                         def props = readProperties file: '.env'
                         def dockerUser = props['DOCKER_HUB_USER']
@@ -57,7 +57,7 @@ pipeline {
             steps {
                 withCredentials([
                     sshUserPrivateKey(
-                        credentialsId: 'ec2_ssh',
+                        credentialsId: 'ec2_ssh2',
                         keyFileVariable: 'ANSIBLE_SSH_KEY',
                         usernameVariable: 'ANSIBLE_SSH_USER'
                     )
