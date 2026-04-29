@@ -9,7 +9,7 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": {"type": "grafana", "uid": "-- Graphics --"},
+        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -109,7 +109,7 @@
           "links": [
             {
               "title": "View Trace in Jaeger",
-              "url": "/jaeger/search?service=web-app&tags=%7B%22error%22%3A%22true%22%7D",
+              "url": "/jaeger:16686/trace/${__field.trace_id}",
               "targetBlank": true
             }
           ]
