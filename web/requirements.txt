@@ -2,11 +2,11 @@ Flask==3.0.2
 mysql-connector-python==8.3.0
 prometheus-client
 python-json-logger
-opentelemetry-api
-opentelemetry-sdk
-opentelemetry-instrumentation-flask
-opentelemetry-instrumentation-requests
-opentelemetry-exporter-jaeger
-opentelemetry-instrumentation-mysql
+opentelemetry-api==1.25.0
+opentelemetry-sdk==1.25.0
+opentelemetry-instrumentation-flask==0.45b0
+opentelemetry-instrumentation-requests==0.45b0
+opentelemetry-instrumentation-mysql==0.45b0
+opentelemetry-exporter-jaeger==1.25.0
 requests>=2.31.0
 deprecated
