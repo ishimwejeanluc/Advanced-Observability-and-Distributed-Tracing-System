@@ -13,13 +13,46 @@ pipeline {
 
     stages {
 
-        stage('Prepare .env') {
+        stage('Load .env') {
             steps {
                 withCredentials([file(credentialsId: 'app_env_file1', variable: 'APP_ENV_FILE')]) {
                     sh '''
                         cp "$APP_ENV_FILE" .env
                         chmod 600 .env
                     '''
+
+                    script {
+                        def props = readProperties file: '.env'
+
+                        def requiredKeys = [
+                            'DOCKER_HUB_USER',
+                            'DOCKER_HUB_PASSWORD',
+                            'DOCKER_HUB_REPO',
+                            'EC2_PUBLIC_IP',
+                            'DB_HOST',
+                            'DB_PORT',
+                            'DB_NAME',
+                            'DB_USER',
+                            'DB_PASSWORD',
+                            'GF_ADMIN_USER',
+                            'GF_ADMIN_PASSWORD'
+                        ]
+
+                        def missingKeys = requiredKeys.findAll { key -> !props[key]?.trim() }
+                        if (missingKeys) {
+                            error("Missing required .env values: ${missingKeys.join(', ')}")
+                        }
+
+                        props.each { key, value ->
+                            env."${key}" = value?.toString()?.trim()
+                        }
+
+                        // Standardized Docker credentials
+                        env.DOCKER_USERNAME = env.DOCKER_HUB_USER
+                        env.DOCKER_PASSWORD = env.DOCKER_HUB_PASSWORD
+
+                        env.DOCKER_IMAGE = "${env.DOCKER_USERNAME}/${env.DOCKER_HUB_REPO}"
+                    }
                 }
             }
         }
@@ -31,25 +64,20 @@ pipeline {
             }
         }
 
-        stage('Docker Build & Push') {
+        stage('Docker Build') {
             steps {
-                echo 'Building and pushing Docker image...'
-                withCredentials([
-                    file(credentialsId: 'app_env_file1', variable: 'APP_ENV_FILE'),
-                    usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')
-                ]) {
-                    script {
-                        def props = readProperties file: '.env'
-                        def dockerRepo = props['DOCKER_HUB_REPO']
-                        def imageName = "${DOCKER_USER}/${dockerRepo}"
-                        def tag = env.IMAGE_TAG
-                        def customImage = docker.build("${imageName}:${tag}", "-f web/Dockerfile web")
-                        docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                            customImage.push()
-                        }
-                        writeFile file: 'docker_image.txt', text: imageName
-                    }
-                }
+                echo 'Building Docker image...'
+                sh "docker build -t ${env.DOCKER_IMAGE}:${env.IMAGE_TAG} -f web/Dockerfile web"
+            }
+        }
+
+        stage('Push to Registry') {
+            steps {
+                echo 'Pushing Docker image...'
+                sh '''
+                    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                    docker push $DOCKER_IMAGE:$IMAGE_TAG
+                '''
             }
         }
 
@@ -62,41 +90,29 @@ pipeline {
                         usernameVariable: 'ANSIBLE_SSH_USER'
                     )
                 ]) {
-                     script {
-                        def props = readProperties file: '.env'
-                        def ec2Host = props['EC2_PUBLIC_DNS'] 
-                        def image = readFile('docker_image.txt').trim()
-                        
-                        withEnv(["EC2_HOST=${ec2Host}"]) {
-                            sh '''
-                                bash -c "
-                                scp -o StrictHostKeyChecking=no -i "$ANSIBLE_SSH_KEY" .env "$ANSIBLE_SSH_USER"@$EC2_HOST:/tmp/.env
-                            '''
-                        }
-                        // Run ansible-playbook, passing only non-secret args
-                        sh '''
-                            bash -c "
-                            ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \
-                                -i "$ec2Host," \
-                                -u "$ANSIBLE_SSH_USER" \
-                                --private-key "$ANSIBLE_SSH_KEY" \
-                                ansible/main.yml \
-                                -e "web_image=$image:${env.IMAGE_TAG}" \
-                                -e "env_file=/tmp/.env"
-                        '''
-                        // Remove .env from EC2 after deploy (optional, for extra safety)
-                        sh '''
-                            bash -c "
-                            ssh -o StrictHostKeyChecking=no -i "$ANSIBLE_SSH_KEY" "$ANSIBLE_SSH_USER"@$ec2Host 'rm -f /tmp/.env'
-                        '''
-                    }
+                    sh """
+                    ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \
+                        -i "${env.EC2_PUBLIC_IP}," \
+                        -u "${env.ANSIBLE_SSH_USER}" \
+                        --private-key "${ANSIBLE_SSH_KEY}" \
+                        ansible/main.yml \
+                        -e "web_image=${env.DOCKER_IMAGE}:${env.IMAGE_TAG}" \
+                        -e "docker_username=${env.DOCKER_USERNAME}" \
+                        -e "docker_password=${env.DOCKER_PASSWORD}" \
+                        -e "db_host=${env.DB_HOST}" \
+                        -e "db_port=${env.DB_PORT}" \
+                        -e "db_name=${env.DB_NAME}" \
+                        -e "db_user=${env.DB_USER}" \
+                        -e "db_password=${env.DB_PASSWORD}" \
+                        -e "gf_admin_user=${env.GF_ADMIN_USER}" \
+                        -e "gf_admin_password=${env.GF_ADMIN_PASSWORD}"
+                    """
                 }
             }
         }
 
         stage('Cleanup') {
             steps {
-                sh 'rm -f .env docker_image.txt || true'
                 sh 'docker image prune -f || true'
             }
         }
