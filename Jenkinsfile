@@ -72,11 +72,13 @@ pipeline {
                         """
                         withEnv(["EC2_HOST=${ec2Host}"]) {
                             sh '''
+                                #!/bin/bash
                                 scp -o StrictHostKeyChecking=no -i "$ANSIBLE_SSH_KEY" .env "$ANSIBLE_SSH_USER"@$EC2_HOST:/tmp/.env
                             '''
                         }
                         // Run ansible-playbook, passing only non-secret args
                         sh '''
+                            #!/bin/bash
                             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \
                                 -i "$ec2Host," \
                                 -u "$ANSIBLE_SSH_USER" \
@@ -87,6 +89,7 @@ pipeline {
                         '''
                         // Remove .env from EC2 after deploy (optional, for extra safety)
                         sh '''
+                            #!/bin/bash
                             ssh -o StrictHostKeyChecking=no -i "$ANSIBLE_SSH_KEY" "$ANSIBLE_SSH_USER"@$ec2Host 'rm -f /tmp/.env'
                         '''
                     }
