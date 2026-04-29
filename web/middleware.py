@@ -2,6 +2,8 @@ import time
 import logging
 from flask import request, g
 from werkzeug.exceptions import HTTPException
+from opentelemetry import trace
+from opentelemetry.trace import StatusCode
 from metrics import HTTP_REQUESTS_TOTAL, HTTP_REQUEST_DURATION_SECONDS, HTTP_ERRORS_TOTAL
 
 logger = logging.getLogger(__name__)
@@ -67,17 +69,15 @@ def setup_observability(app):
     def handle_exception(e):
         if isinstance(e, HTTPException):
             return e
-        # Log the exception with stack trace
+
+        span = trace.get_current_span()
+        span.record_exception(e)
+        span.set_status(StatusCode.ERROR, str(e))
+
         logger.exception(f"Unhandled Exception: {str(e)}", extra={
             "method": request.method,
             "path": request.path,
             "endpoint": request.endpoint
         })
-        
-        # We still want to record metrics for this failure
-        # Flask usually doesn't call after_request if an exception is raised 
-        # but if we have an error handler, it returns a response which then goes through after_request.
-        # However, to be safe, we can manually trigger it or let Flask handle it.
-        # In modern Flask, after_request is called after the error handler.
-        
+
         return {"error": "Internal Server Error"}, 500

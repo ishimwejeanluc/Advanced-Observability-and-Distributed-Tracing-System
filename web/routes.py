@@ -1,7 +1,9 @@
 from flask import Blueprint, jsonify, request
+from opentelemetry import trace
 from database import get_connection
 
 bp = Blueprint("topics", __name__)
+tracer = trace.get_tracer(__name__)
 
 
 @bp.get("/api/health")
@@ -22,12 +24,14 @@ def list_topics():
 
 @bp.post("/api/topics")
 def create_topic():
-    payload = request.get_json(silent=True) or {}
-    title = payload.get("title")
-    description = payload.get("description", "")
-
-    if not title:
-        return jsonify({"error": "title is required"}), 400
+    with tracer.start_as_current_span("validate_input") as span:
+        payload = request.get_json(silent=True) or {}
+        title = payload.get("title")
+        description = payload.get("description", "")
+        span.set_attribute("input.title_present", bool(title))
+        if not title:
+            span.set_attribute("validation.error", "title is required")
+            return jsonify({"error": "title is required"}), 400
 
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
@@ -67,12 +71,15 @@ def get_topic(topic_id):
 
 @bp.put("/api/topics/<int:topic_id>")
 def update_topic(topic_id):
-    payload = request.get_json(silent=True) or {}
-    title = payload.get("title")
-    description = payload.get("description")
-
-    if title is None and description is None:
-        return jsonify({"error": "title or description is required"}), 400
+    with tracer.start_as_current_span("validate_input") as span:
+        payload = request.get_json(silent=True) or {}
+        title = payload.get("title")
+        description = payload.get("description")
+        span.set_attribute("input.has_title", title is not None)
+        span.set_attribute("input.has_description", description is not None)
+        if title is None and description is None:
+            span.set_attribute("validation.error", "title or description is required")
+            return jsonify({"error": "title or description is required"}), 400
 
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)

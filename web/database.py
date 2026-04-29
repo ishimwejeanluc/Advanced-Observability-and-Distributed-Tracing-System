@@ -2,8 +2,10 @@ import os
 import time
 import logging
 import mysql.connector
+from opentelemetry import trace
 
 logger = logging.getLogger(__name__)
+tracer = trace.get_tracer(__name__)
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_NAME = os.getenv("DB_NAME", "topics_db")
@@ -13,13 +15,17 @@ DB_PORT = int(os.getenv("DB_PORT", "3306"))
 
 
 def get_connection():
-    return mysql.connector.connect(
-        host=DB_HOST,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=DB_NAME,
-        port=DB_PORT,
-    )
+    with tracer.start_as_current_span("db.connect") as span:
+        span.set_attribute("db.host", DB_HOST)
+        span.set_attribute("db.name", DB_NAME)
+        span.set_attribute("db.port", DB_PORT)
+        return mysql.connector.connect(
+            host=DB_HOST,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=DB_NAME,
+            port=DB_PORT,
+        )
 
 
 def wait_for_db(retries=20, delay=3):
