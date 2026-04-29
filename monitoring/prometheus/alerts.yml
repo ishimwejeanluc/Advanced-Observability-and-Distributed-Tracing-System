@@ -17,7 +17,7 @@ groups:
           description: |
             Error rate is {{ $value | printf "%.2f" }}% over the last 10m.
             Investigate recent deployments or upstream dependencies.
-          jaeger_url: "http://localhost/jaeger/search?service=web-app&tags=%7B%22error%22%3A%22true%22%7D"
+          jaeger_url: "/jaeger/search?service=web-app&tags=%7B%22error%22%3A%22true%22%7D"
 
       - alert: HighLatency
         expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[10m])) by (le)) > 0.3

@@ -40,7 +40,7 @@
       "title": "95th Percentile Latency (by route)",
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
       "targets": [
-        {"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route))", "legendFormat": "{{route}}"}
+        {"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route))", "legendFormat": "{{route}}", "exemplar": true}
       ],
       "fieldConfig": {"defaults": {"unit": "s"}}
     },
@@ -49,9 +49,9 @@
       "title": "Aggregate Request Latency (p50/p90/p99)",
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
       "targets": [
-        {"expr": "histogram_quantile(0.5, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50"},
-        {"expr": "histogram_quantile(0.9, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p90"},
-        {"expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99"}
+        {"expr": "histogram_quantile(0.5, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50", "exemplar": true},
+        {"expr": "histogram_quantile(0.9, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p90", "exemplar": true},
+        {"expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99", "exemplar": true}
       ],
       "fieldConfig": {"defaults": {"unit": "s"}}
     },
@@ -92,12 +92,13 @@
     },
     {
       "type": "table",
-      "title": "Recent Errors (with Trace Links)",
+      "title": "Recent Error Traces",
       "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32},
       "targets": [
         {
-          "expr": "topk(10, http_errors_total)",
-          "legendFormat": "Error"
+          "expr": "http_request_duration_seconds_bucket{le=\"+Inf\"}",
+          "exemplar": true,
+          "legendFormat": ""
         }
       ],
       "options": {
@@ -109,7 +110,7 @@
           "links": [
             {
               "title": "View Trace in Jaeger",
-              "url": "/jaeger:16686/trace/${__field.trace_id}",
+              "url": "/jaeger/trace/${__data.fields.trace_id}",
               "targetBlank": true
             }
           ]

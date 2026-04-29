@@ -27,18 +27,26 @@ def record_metrics(response):
         status_code=status_code
     ).inc()
     
-    # Increment error counter if status is 4xx or 5xx
     if status_code >= 400:
+        span = trace.get_current_span()
+        ctx = span.get_span_context() if span else None
+        exemplar = {'trace_id': format(ctx.trace_id, '032x')} if ctx and ctx.is_valid else None
+
         HTTP_ERRORS_TOTAL.labels(
             method=method,
             endpoint=endpoint,
             status_code=status_code
-        ).inc()
-    
-    HTTP_REQUEST_DURATION_SECONDS.labels(
-        method=method, 
-        endpoint=endpoint
-    ).observe(latency)
+        ).inc(exemplar=exemplar)
+
+        HTTP_REQUEST_DURATION_SECONDS.labels(
+            method=method,
+            endpoint=endpoint
+        ).observe(latency, exemplar=exemplar)
+    else:
+        HTTP_REQUEST_DURATION_SECONDS.labels(
+            method=method,
+            endpoint=endpoint
+        ).observe(latency)
 
     # Log request details in structured format
     # The logger is already configured to output JSON
