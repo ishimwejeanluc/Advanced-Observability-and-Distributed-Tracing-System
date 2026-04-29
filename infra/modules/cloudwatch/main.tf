@@ -4,7 +4,7 @@
 
 # IAM Role for EC2 to push logs to CloudWatch
 resource "aws_iam_role" "ec2_cwlogs" {
-  name               = "${var.project_name}-ec2-cwlogs-role"
+  name               = "${var.project_name}-ec2-cwlogs-role-123456"
   assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
 }
 
@@ -24,7 +24,7 @@ resource "aws_iam_role_policy_attachment" "cwlogs" {
 }
 
 resource "aws_iam_instance_profile" "ec2_cwlogs" {
-  name = "${var.project_name}-ec2-cwlogs-profile"
+  name = "${var.project_name}-ec2-cwlogs-profile-123456"
   role = aws_iam_role.ec2_cwlogs.name
 }
 
