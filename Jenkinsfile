@@ -62,19 +62,22 @@ pipeline {
                         usernameVariable: 'ANSIBLE_SSH_USER'
                     )
                 ]) {
-                    script {
+                     script {
                         def props = readProperties file: '.env'
-                        def ec2Ip = props['EC2_PUBLIC_IP']
+                        def ec2Host = props['EC2_PUBLIC_DNS'] 
                         def image = readFile('docker_image.txt').trim()
-                        
+                        // Debug: print EC2 host
+                        sh """
+                            echo 'DEBUG: EC2 host is $ec2Host'
+                        """
                         // Copy .env securely to EC2
                         sh '''
-                            scp -o StrictHostKeyChecking=no -i "$ANSIBLE_SSH_KEY" .env "$ANSIBLE_SSH_USER"@$ec2Ip:/tmp/.env
+                            scp -o StrictHostKeyChecking=no -i "$ANSIBLE_SSH_KEY" .env "$ANSIBLE_SSH_USER"@$ec2Host:/tmp/.env
                         '''
                         // Run ansible-playbook, passing only non-secret args
                         sh '''
                             ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook \
-                                -i "$ec2Ip," \
+                                -i "$ec2Host," \
                                 -u "$ANSIBLE_SSH_USER" \
                                 --private-key "$ANSIBLE_SSH_KEY" \
                                 ansible/main.yml \
@@ -83,7 +86,7 @@ pipeline {
                         '''
                         // Remove .env from EC2 after deploy (optional, for extra safety)
                         sh '''
-                            ssh -o StrictHostKeyChecking=no -i "$ANSIBLE_SSH_KEY" "$ANSIBLE_SSH_USER"@$ec2Ip 'rm -f /tmp/.env'
+                            ssh -o StrictHostKeyChecking=no -i "$ANSIBLE_SSH_KEY" "$ANSIBLE_SSH_USER"@$ec2Host 'rm -f /tmp/.env'
                         '''
                     }
                 }
