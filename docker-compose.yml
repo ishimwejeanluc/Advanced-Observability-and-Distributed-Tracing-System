@@ -64,6 +64,7 @@ services:
       - "14268:14268" # Jaeger collector (HTTP)
     environment:
       - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - QUERY_BASE_PATH=/jaeger
     restart: unless-stopped
 
   node-exporter:

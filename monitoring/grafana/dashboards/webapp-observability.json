@@ -3,7 +3,7 @@
   "title": "Web App Observability - RED, System, Tracing",
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 4,
+  "version": 3,
   "refresh": "10s",
   "annotations": {
     "list": [
@@ -23,150 +23,81 @@
       "type": "timeseries",
       "title": "Request Rate (RPS, by route)",
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
       "targets": [
         {"expr": "sum(rate(http_requests_total[5m])) by (route)", "legendFormat": "{{route}}"}
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "noValue": "0",
-          "custom": {"spanNulls": true}
-        }
-      }
+      ]
     },
     {
       "type": "timeseries",
       "title": "Error Rate (by route)",
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
       "targets": [
         {"expr": "sum(rate(http_errors_total[5m])) by (route)", "legendFormat": "{{route}}"}
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "noValue": "0",
-          "custom": {"spanNulls": true}
-        }
-      }
+      ]
     },
     {
       "type": "timeseries",
       "title": "95th Percentile Latency (by route)",
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
       "targets": [
         {"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, route))", "legendFormat": "{{route}}"}
       ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "noValue": "0",
-          "custom": {"spanNulls": true}
-        }
-      }
+      "fieldConfig": {"defaults": {"unit": "s"}}
     },
     {
       "type": "timeseries",
       "title": "Aggregate Request Latency (p50/p90/p99)",
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
       "targets": [
         {"expr": "histogram_quantile(0.5, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50"},
         {"expr": "histogram_quantile(0.9, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p90"},
         {"expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99"}
       ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "noValue": "0",
-          "custom": {"spanNulls": true}
-        }
-      }
+      "fieldConfig": {"defaults": {"unit": "s"}}
     },
     {
       "type": "timeseries",
       "title": "Aggregate Error Rate %",
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
       "targets": [
         {"expr": "((sum(rate(http_errors_total[5m])) OR on() vector(0)) / clamp_min(sum(rate(http_requests_total[5m])), 1e-9)) * 100", "legendFormat": "Error %"}
       ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "noValue": "0",
-          "custom": {
-            "spanNulls": true,
-            "thresholdsStyle": {"mode": "line+area"}
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {"color": "green", "value": null},
-              {"color": "red", "value": 5}
-            ]
-          }
-        }
-      }
+      "fieldConfig": {"defaults": {"unit": "percent"}}
     },
     {
       "type": "timeseries",
       "title": "Aggregate Requests per Second (RPS)",
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
       "targets": [
         {"expr": "sum(rate(http_requests_total[5m]))", "legendFormat": "RPS"}
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "noValue": "0",
-          "custom": {"spanNulls": true}
-        }
-      }
+      ]
     },
     {
       "type": "timeseries",
       "title": "CPU Usage (%)",
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
       "targets": [
         {"expr": "100 - (avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "CPU %"}
       ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "noValue": "0",
-          "custom": {"spanNulls": true}
-        }
-      }
+      "fieldConfig": {"defaults": {"unit": "percent"}}
     },
     {
       "type": "timeseries",
       "title": "Memory Usage (MB)",
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
       "targets": [
         {"expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 1024 / 1024", "legendFormat": "Used Memory"}
       ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "megabytes",
-          "decimals": 0,
-          "noValue": "0",
-          "custom": {"spanNulls": true}
-        }
-      }
+      "fieldConfig": {"defaults": {"unit": "megabytes", "decimals": 0}}
     },
     {
       "type": "table",
       "title": "Recent Errors (with Trace Links)",
       "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32},
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
       "targets": [
         {
           "expr": "topk(10, http_errors_total)",
-          "legendFormat": "Error",
-          "instant": true
+          "legendFormat": "Error"
         }
       ],
       "options": {
@@ -174,7 +105,6 @@
       },
       "fieldConfig": {
         "defaults": {
-          "noValue": "0",
           "custom": {},
           "links": [
             {
