@@ -93,28 +93,46 @@
     {
       "type": "table",
       "title": "Recent Error Traces",
+      "id": 9,
+      "pluginVersion": "11.1.0",
       "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32},
+      "datasource": {"type": "jaeger", "uid": "jaeger"},
       "targets": [
         {
-          "expr": "http_request_duration_seconds_bucket{le=\"+Inf\"}",
-          "exemplar": true,
-          "legendFormat": ""
+          "refId": "A",
+          "datasource": {"type": "jaeger", "uid": "jaeger"},
+          "queryType": "search",
+          "service": "advanced-monitoring-webapp",
+          "tags": "error=true",
+          "limit": 10
         }
       ],
       "options": {
-        "showHeader": true
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": ["sum"],
+          "countRows": false,
+          "fields": ""
+        }
       },
       "fieldConfig": {
         "defaults": {
-          "custom": {},
+          "custom": {
+            "align": "auto",
+            "cellOptions": {"type": "auto"},
+            "inspect": false
+          },
           "links": [
             {
+              "targetBlank": true,
               "title": "View Trace in Jaeger",
-              "url": "/jaeger/trace/${__data.fields.trace_id}",
-              "targetBlank": true
+              "url": "/jaeger/trace/${__data.fields.traceID}"
             }
           ]
-        }
+        },
+        "overrides": []
       }
     }
   ],
