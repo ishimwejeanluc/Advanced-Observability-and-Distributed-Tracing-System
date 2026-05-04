@@ -29,6 +29,9 @@ def record_metrics(response):
     
     if status_code >= 400:
         span = trace.get_current_span()
+        if span and span.is_recording():
+            span.set_status(StatusCode.ERROR, f"HTTP {status_code}")
+
         ctx = span.get_span_context() if span else None
         exemplar = {'trace_id': format(ctx.trace_id, '032x')} if ctx and ctx.is_valid else None
 
