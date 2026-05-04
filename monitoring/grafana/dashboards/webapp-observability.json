@@ -93,6 +93,7 @@
     {
       "type": "table",
       "title": "Recent Error Traces",
+      "description": "Last 10 traces with error=true in the selected time range. An empty table means no errors observed — this is the desired state. Click a row to open the trace in Jaeger.",
       "id": 9,
       "pluginVersion": "11.1.0",
       "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32},
