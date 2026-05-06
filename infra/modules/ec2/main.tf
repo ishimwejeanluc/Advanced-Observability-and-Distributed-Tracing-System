@@ -67,21 +67,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_http_ipv4" {
   ip_protocol       = "tcp"
   to_port           = 80
 }
-resource "aws_vpc_security_group_ingress_rule" "allow_grafana_ipv4" {
-  security_group_id = aws_security_group.this.id
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 3000
-  ip_protocol       = "tcp"
-  to_port           = 3000
-}
 
-resource "aws_vpc_security_group_ingress_rule" "allow_web_ipv4" {
-  security_group_id = aws_security_group.this.id
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 5000
-  ip_protocol       = "tcp"
-  to_port           = 5000
-}
 
 
 resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
