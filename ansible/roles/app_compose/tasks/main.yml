@@ -32,6 +32,8 @@
     - "{{ app_dir }}/monitoring"
     - "{{ app_dir }}/monitoring/prometheus"
     - "{{ app_dir }}/monitoring/grafana"
+    - "{{ app_dir }}/monitoring/alloy"
+    - "{{ app_dir }}/monitoring/loki"
     - "{{ app_dir }}/reverse-proxy"
 
 - name: Copy Prometheus configuration
