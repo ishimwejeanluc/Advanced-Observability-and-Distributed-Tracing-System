@@ -48,6 +48,18 @@
     dest: "{{ app_dir }}/monitoring/grafana/"
     mode: "0644"
 
+- name: Copy Alloy configuration
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../monitoring/alloy/"
+    dest: "{{ app_dir }}/monitoring/alloy/"
+    mode: "0644"
+
+- name: Copy Loki configuration
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../monitoring/loki/"
+    dest: "{{ app_dir }}/monitoring/loki/"
+    mode: "0644"
+
 - name: Copy Nginx configuration
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/../reverse-proxy/"
