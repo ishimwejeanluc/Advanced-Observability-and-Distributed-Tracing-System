@@ -78,13 +78,12 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
 
 # --- EC2 Instance ---
 resource "aws_instance" "ec2_server" {
-  ami                    = data.aws_ami.amazon_linux_2.id
-  instance_type          = var.instance_type
-  key_name               = aws_key_pair.this.key_name
-  vpc_security_group_ids = [aws_security_group.this.id]
-  subnet_id              = data.aws_subnets.default.ids[0]
+  ami                         = data.aws_ami.amazon_linux_2.id
+  instance_type               = var.instance_type
+  key_name                    = aws_key_pair.this.key_name
+  vpc_security_group_ids      = [aws_security_group.this.id]
+  subnet_id                   = data.aws_subnets.default.ids[0]
   associate_public_ip_address = true
-  iam_instance_profile   = var.iam_instance_profile
 
   tags = var.tags
 }

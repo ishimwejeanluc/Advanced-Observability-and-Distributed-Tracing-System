@@ -38,22 +38,15 @@ locals {
   inventory_tmpl   = abspath("${path.module}/../ansible/inventory.tmpl")
 }
 
-# --- CloudWatch Module ---
-module "cloudwatch" {
-  source       = "./modules/cloudwatch"
-  project_name = var.project_name
-}
-
 # --- Single Consolidated EC2 Module ---
 module "web_server" {
   source = "./modules/ec2"
 
-  project_name         = var.project_name
-  instance_type        = var.instance_type
-  key_name             = var.key_name
-  allowed_ssh_cidr     = var.allowed_ssh_cidr
-  iam_instance_profile = module.cloudwatch.instance_profile_name
-  
+  project_name     = var.project_name
+  instance_type    = var.instance_type
+  key_name         = var.key_name
+  allowed_ssh_cidr = var.allowed_ssh_cidr
+
   private_key_path = local.private_key_path
   inventory_path   = local.inventory_path
   template_path    = local.inventory_tmpl

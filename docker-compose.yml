@@ -32,13 +32,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    logging:
-      driver: awslogs
-      options:
-        awslogs-region: "eu-west-1"
-        awslogs-group: "/docker/web-app"
-        awslogs-stream: web-app
-      
 
   prometheus:
     image: prom/prometheus:v2.53.0
@@ -78,6 +71,33 @@ services:
     volumes:
       - /:/host:ro,rslave
 
+  loki:
+    image: grafana/loki:3.1.0
+    container_name: loki
+    command: -config.file=/etc/loki/loki-config.yaml
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki_data:/loki
+    restart: unless-stopped
+
+  alloy:
+    image: grafana/alloy:v1.2.0
+    container_name: alloy
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - /etc/alloy/config.alloy
+    ports:
+      - "12345:12345" # Alloy UI
+    volumes:
+      - ./monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+    restart: unless-stopped
+
   grafana:
     image: grafana/grafana:11.1.0
     ports:
@@ -95,6 +115,7 @@ services:
       - grafana_data:/var/lib/grafana
     depends_on:
       - prometheus
+      - loki
 
   nginx:
     image: nginx:1.27-alpine
@@ -110,4 +131,5 @@ volumes:
   db_data:
   prometheus_data:
   grafana_data:
+  loki_data:
  

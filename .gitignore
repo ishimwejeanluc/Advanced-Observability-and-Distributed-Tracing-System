@@ -13,3 +13,4 @@ crash.log
 ansible/vault.yml
 .DS_Store
 *.pdf
+docs

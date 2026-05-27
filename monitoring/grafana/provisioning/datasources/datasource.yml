@@ -17,3 +17,26 @@ datasources:
     access: proxy
     url: http://jaeger:16686/jaeger
     editable: true
+    jsonData:
+      # Trace -> Logs: "Logs for this span" button in the Jaeger trace view.
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        filterByTraceID: false
+        customQuery: true
+        query: '{service="web"} | json | trace_id="$${__trace.traceId}"'
+
+  - name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: true
+    jsonData:
+      # Log -> Trace: make the trace_id field a clickable link to the Jaeger trace.
+      derivedFields:
+        - name: TraceID
+          matcherRegex: '"trace_id":\s*"(\w+)"'
+          url: '$${__value.raw}'
+          datasourceUid: jaeger

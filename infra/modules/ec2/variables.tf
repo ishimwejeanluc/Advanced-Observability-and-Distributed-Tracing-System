@@ -6,7 +6,7 @@ variable "project_name" {
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  
+
 }
 
 variable "key_name" {
@@ -41,12 +41,6 @@ variable "ssh_user" {
   description = "SSH user for Ansible inventory"
   type        = string
   default     = "ec2-user"
-}
-
-variable "iam_instance_profile" {
-  description = "IAM instance profile name for the EC2 instance"
-  type        = string
-  default     = null
 }
 
 variable "tags" {
